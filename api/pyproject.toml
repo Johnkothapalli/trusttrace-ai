@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "trusttrace-api"
+version = "0.1.0"
+description = "Explainable, deterministic guardrails and observability for AI application traces."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "John Kothapalli" }]
+dependencies = [
+  "fastapi>=0.141.1,<1.0",
+  "pydantic-settings>=2.10,<3.0",
+  "sqlalchemy>=2.0.41,<3.0",
+  "uvicorn[standard]>=0.35,<1.0",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2.9,<4.0"]
+dev = [
+  "httpx2>=2.12,<3.0",
+  "pytest>=9.0.3,<10.0",
+  "pytest-cov>=6.2,<7.0",
+  "ruff>=0.12.4,<1.0",
+]
+
+[project.scripts]
+trusttrace-api = "app.main:run"
+trusttrace-seed = "app.seed:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+addopts = "-q --strict-markers --disable-warnings"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]

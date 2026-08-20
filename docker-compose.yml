@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: trusttrace
+      POSTGRES_USER: trusttrace
+      POSTGRES_PASSWORD: trusttrace_local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trusttrace -d trusttrace"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - trusttrace_postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  api:
+    build:
+      context: ./api
+    environment:
+      TRUSTTRACE_DATABASE_URL: ${TRUSTTRACE_DATABASE_URL:-postgresql+psycopg://trusttrace:trusttrace_local@postgres:5432/trusttrace}
+      TRUSTTRACE_INGEST_API_KEY: ${TRUSTTRACE_INGEST_API_KEY:-tt_demo_ingest_change_me}
+      TRUSTTRACE_ADMIN_API_KEY: ${TRUSTTRACE_ADMIN_API_KEY:-tt_demo_admin_change_me}
+      TRUSTTRACE_APP_ENV: ${TRUSTTRACE_APP_ENV:-development}
+      TRUSTTRACE_PUBLIC_DEMO_READS: ${TRUSTTRACE_PUBLIC_DEMO_READS:-true}
+      TRUSTTRACE_SEED_DEMO_DATA: ${TRUSTTRACE_SEED_DEMO_DATA:-true}
+      TRUSTTRACE_CORS_ORIGINS: ${TRUSTTRACE_CORS_ORIGINS:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_URL: http://api:8000
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:8000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+volumes:
+  trusttrace_postgres:
